@@ -1,0 +1,9 @@
+{
+  "name": "Stock Opname",
+  "short_name": "Stock Opname",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#172033",
+  "description": "Aplikasi stock opname lokal untuk HP"
+}

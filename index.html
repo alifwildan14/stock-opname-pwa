@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172033">
+<meta name="description" content="Aplikasi Stock Opname">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Stock Opname</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header>
+  <div><h1>📦 Stock Opname</h1><p>Data tersimpan di Supabase — cari Part Number, Part Name, atau No. Drawing</p></div>
+  <div class="actions">
+    <button id="installBtn" class="secondary hidden">Pasang App</button>
+    <button id="exportBtn" class="secondary">Export</button>
+    <button id="resetBtn" class="danger">Reset</button>
+  </div>
+</header>
+
+<section class="stats">
+  <div><b id="total">0</b><span>Total Part</span></div>
+  <div><b id="done">0</b><span>Sudah Opname</span></div>
+  <div><b id="pending">0</b><span>Belum Opname</span></div>
+  <div><b id="varianceCount">0</b><span>Ada Selisih</span></div>
+</section>
+
+<section id="searchPage" class="panel">
+  <input id="search" autofocus placeholder="🔍  Cari Part Number / Nama / Drawing..." autocomplete="off">
+  <div id="status" class="status loading">Menghubungkan ke database...</div>
+  <div id="hint"></div>
+  <div id="results"></div>
+</section>
+
+<section id="detailPage" class="panel hidden">
+  <div class="top">
+    <div><small>PART NUMBER</small><h2 id="partNo">-</h2></div>
+    <button id="back" class="secondary">← Kembali</button>
+  </div>
+  <div class="product">
+    <div><small>PART NAME</small><strong id="partName">-</strong></div>
+    <div><small>NO. DRAWING</small><strong id="drawing">-</strong></div>
+  </div>
+
+  <label>Stok Sistem
+    <input id="system" type="number" min="0" step="1" placeholder="Masukkan stok sistem">
+  </label>
+
+  <label>Stok Aktual
+    <input id="actual" type="number" min="0" step="1" placeholder="Masukkan hasil hitung">
+  </label>
+
+  <div class="variance"><span>SELISIH</span><b id="diff">-</b></div>
+
+  <label>Keterangan
+    <textarea id="note" placeholder="Opsional"></textarea>
+  </label>
+
+  <button id="save" class="primary">✓ Simpan Opname</button>
+</section>
+
+<div id="toast" class="toast"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
