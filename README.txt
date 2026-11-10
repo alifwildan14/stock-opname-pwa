@@ -1,8 +1,18 @@
-STOCK OPNAME PWA V5
+STOCK OPNAME PWA V6
 
 PWA untuk HP dengan sidebar: Home, Data Master, Stock, Riwayat
 Revisi, Komplain, About. Data master + hasil opname tersimpan di
 Supabase. Export menghasilkan file .xlsx asli.
+
+YANG BERUBAH DI V6 (REFRESH TAMPILAN)
+- Sidebar gelap (navy) dengan menu aktif berwarna biru.
+- Kartu statistik berikon warna (Total/Sudah/Belum/Total Stok).
+- Form opname: tombol +/− untuk hitung stok (tanpa ketik),
+  angka besar, tombol Simpan lebih besar.
+- Hasil pencarian yang sudah diopname bergaris hijau + nilai stok.
+- Tabel berubah jadi kartu di layar HP (label tiap kolom).
+- Topbar menempel saat scroll; tombol lebih besar & nyaman disentuh.
+- Progress bar hijau bergradasi; toast & panel lebih halus.
 
 YANG BERUBAH DI V5
 - Form opname disederhanakan: HANYA Stok Saat Ini + Waktu Input

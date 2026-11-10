@@ -49,10 +49,10 @@
     <!-- HOME -->
     <section id="view-home" class="view">
       <div class="stats">
-        <div><b id="total">0</b><span>Total Part</span></div>
-        <div><b id="done">0</b><span>Sudah Opname</span></div>
-        <div><b id="pending">0</b><span>Belum Opname</span></div>
-        <div><b id="qtyTotal">0</b><span>Total Stok Saat Ini</span></div>
+        <div class="stat blue"><span class="stat-icon">📦</span><div><b id="total">0</b><span>Total Part</span></div></div>
+        <div class="stat green"><span class="stat-icon">✅</span><div><b id="done">0</b><span>Sudah Opname</span></div></div>
+        <div class="stat amber"><span class="stat-icon">⏳</span><div><b id="pending">0</b><span>Belum Opname</span></div></div>
+        <div class="stat teal"><span class="stat-icon">📊</span><div><b id="qtyTotal">0</b><span>Total Stok Saat Ini</span></div></div>
       </div>
       <div class="progress-wrap">
         <div class="progress-label"><span>Progress opname hari ini</span><b id="progressText">0%</b></div>
@@ -117,9 +117,12 @@
           <div><small>MATERIAL</small><strong id="material">-</strong></div>
           <div><small>STATUS</small><strong id="partStatus">-</strong></div>
         </div>
-        <label>Stok Saat Ini
-          <input id="current" type="number" min="0" step="1" placeholder="Masukkan jumlah hasil hitung">
-        </label>
+        <label>Stok Saat Ini</label>
+        <div class="stepper">
+          <button type="button" id="stepMinus" class="step-btn" aria-label="Kurangi">−</button>
+          <input id="current" type="number" min="0" step="1" placeholder="0" inputmode="numeric">
+          <button type="button" id="stepPlus" class="step-btn" aria-label="Tambah">+</button>
+        </div>
         <label>Waktu Input
           <input id="waktu" type="datetime-local">
         </label>
@@ -199,10 +202,11 @@
     <!-- ABOUT -->
     <section id="view-about" class="view hidden">
       <div class="panel">
-        <h2>📦 Stock Opname <span class="ver">v5</span></h2>
+        <h2>📦 Stock Opname <span class="ver">v6</span></h2>
         <p class="about-text">Aplikasi stock opname untuk HP. Cari part, hitung stok saat ini, simpan — datanya langsung masuk database Supabase dan bisa di-export ke file Excel (.xlsx).</p>
-        <h3>Yang baru di v5</h3>
+        <h3>Yang baru di v6</h3>
         <ul class="about-list">
+          <li>Tampilan baru: sidebar gelap, kartu statistik berikon, tombol +/− untuk hitung stok, tabel berubah jadi kartu di HP.</li>
           <li>Sidebar dengan menu Home, Data Master, Stock, Riwayat Revisi, Komplain, dan About.</li>
           <li>Form opname lebih simpel: hanya Stok Saat Ini + Waktu Input (tanggal, jam, menit).</li>
           <li>Riwayat Revisi: lihat opname per tanggal dan lacak perubahan satu part dari waktu ke waktu.</li>

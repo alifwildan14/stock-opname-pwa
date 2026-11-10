@@ -1,4 +1,5 @@
-// Stock Opname PWA v5 — sidebar + Supabase (PostgREST) + export .xlsx
+// Stock Opname PWA v6 — sidebar + Supabase (PostgREST) + export .xlsx
+// v6: refresh tampilan (sidebar gelap, kartu statistik, stepper +/-,
 // Skema mengikuti situs live qc.alifwildan14.workers.dev:
 //   master_parts(id, part_number, no_drawing, material)
 //   stock_opname(master_part_id, opname_date, revisi_gambar, stok_aktual,
@@ -274,7 +275,7 @@ function renderMaster() {
   $('masterPageInfo').textContent = 'Hal. ' + (masterPage + 1) + ' / ' + pages;
   $('masterBody').innerHTML = slice.map(p => {
     const done = saved[p._id];
-    return `<tr><td><b>${esc(text(p, 'Part No.')) || '-'}</b></td><td>${esc(text(p, 'Part Name')) || '-'}</td><td>${esc(text(p, 'No. Drawing')) || '-'}</td><td>${esc(text(p, 'material')) || '-'}</td><td>${done ? '<span class="pill ok">✓ Sudah · ' + esc(String(done.stok_aktual)) + '</span>' : '<span class="pill">Belum</span>'}</td></tr>`;
+    return `<tr><td data-label="Part Number"><b>${esc(text(p, 'Part No.')) || '-'}</b></td><td data-label="Part Name">${esc(text(p, 'Part Name')) || '-'}</td><td data-label="No. Drawing">${esc(text(p, 'No. Drawing')) || '-'}</td><td data-label="Material">${esc(text(p, 'material')) || '-'}</td><td data-label="Status Hari Ini">${done ? '<span class="pill ok">✓ Sudah · ' + esc(String(done.stok_aktual)) + '</span>' : '<span class="pill">Belum</span>'}</td></tr>`;
   }).join('') || '<tr><td colspan="5">Tidak ditemukan.</td></tr>';
 }
 $('masterSearch').addEventListener('input', () => { masterPage = 0; renderMaster(); });
@@ -290,7 +291,7 @@ function show(q) {
   currentList = a.slice(0, 60);
   $('hint').textContent = q ? a.length.toLocaleString('id-ID') + ' hasil' : 'Ketik untuk mencari. Menampilkan 25 part pertama.';
   $('results').innerHTML = currentList.map(p =>
-    `<div class="result" onclick="pick('${p._id}')"><b>${esc(text(p, 'Part No.')) || '-'}</b><span>${esc(text(p, 'Part Name')) || 'Nama belum diisi'}</span><small>Drawing: ${esc(text(p, 'No. Drawing')) || '-'} · ${saved[p._id] ? '✓ Sudah opname' : 'Belum opname'}</small></div>`
+    `<div class="result${saved[p._id] ? ' done' : ''}" onclick="pick('${p._id}')"><b>${esc(text(p, 'Part No.')) || '-'}</b><span>${esc(text(p, 'Part Name')) || 'Nama belum diisi'}</span><small>Drawing: ${esc(text(p, 'No. Drawing')) || '-'} · ${saved[p._id] ? '✓ Sudah opname · Stok ' + esc(String(saved[p._id].stok_aktual)) : 'Belum opname'}</small></div>`
   ).join('') || '<div class="result">Tidak ditemukan.</div>';
 }
 function pick(id) {
@@ -331,6 +332,10 @@ $('back').onclick = () => {
   $('search').focus();
   show($('search').value);
 };
+
+// Stepper Stok Saat Ini (+/-)
+$('stepMinus').onclick = () => { const el = $('current'); el.value = Math.max(0, Number(el.value || 0) - 1); };
+$('stepPlus').onclick = () => { const el = $('current'); el.value = Number(el.value || 0) + 1; };
 
 $('save').onclick = async () => {
   if (!selected) return;
@@ -400,7 +405,7 @@ async function showHistoryDate(date) {
     $('historyDetailInfo').textContent = (rows || []).length.toLocaleString('id-ID') + ' part diopname pada tanggal ini.';
     $('historyBody').innerHTML = (rows || []).map(r => {
       const pn = r.master_parts?.part_number || '';
-      return `<tr><td>${esc(fmtTime(r.opname_time, r.updated_at))}</td><td><b>${esc(pn)}</b></td><td>${esc(names[pn] || '-')}</td><td>${esc(String(r.stok_aktual ?? ''))}</td><td>${esc(r.keterangan || '')}</td></tr>`;
+      return `<tr><td data-label="Jam">${esc(fmtTime(r.opname_time, r.updated_at))}</td><td data-label="Part Number"><b>${esc(pn)}</b></td><td data-label="Part Name">${esc(names[pn] || '-')}</td><td data-label="Stok">${esc(String(r.stok_aktual ?? ''))}</td><td data-label="Keterangan">${esc(r.keterangan || '')}</td></tr>`;
     }).join('') || '<tr><td colspan="5">Tidak ada data.</td></tr>';
     $('historyDetail').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
