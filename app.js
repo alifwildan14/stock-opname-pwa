@@ -1,8 +1,11 @@
-// Stock Opname PWA v6.1 — sidebar + Supabase (PostgREST) + export .xlsx
-// v6.1: perbaikan service worker — update versi langsung sampai ke
-// pengguna lama (skipWaiting + clients.claim + network-first shell).
+// Stock Opname PWA v7 — sidebar + Supabase (PostgREST) + export .xlsx
+// v7: data master DIGANTI total (636 part baru, 2026-11-10) + kolom
+// Article No. di master, pencarian, detail, riwayat & export.
+// Skema master_parts kini: id, part_number, article_no, no_drawing,
+// material. SQL pengganti master ada di README.txt + file terpisah.
+// Catatan: data baru TIDAK punya Part Name — kolom nama tampil kosong.
 // Skema mengikuti situs live qc.alifwildan14.workers.dev:
-//   master_parts(id, part_number, no_drawing, material)
+//   master_parts(id, part_number, article_no, no_drawing, material)
 //   stock_opname(master_part_id, opname_date, revisi_gambar, stok_aktual,
 //                keterangan, created_at, updated_at)
 //   + kolom opsional opname_time (TIME) — jalankan SQL di README.txt
@@ -116,7 +119,13 @@ async function sbUpsertOpname(payload) {
   return rows[0];
 }
 async function loadMasterFromSupabase() {
-  return sbGetAll('master_parts?select=id,part_number,no_drawing,material&order=part_number.asc');
+  // v7: coba sertakan article_no; bila kolom belum dibuat di Supabase
+  // (SQL belum dijalankan), jatuh ke select lama agar aplikasi tetap online.
+  try {
+    return await sbGetAll('master_parts?select=id,part_number,article_no,no_drawing,material&order=part_number.asc');
+  } catch (e) {
+    return sbGetAll('master_parts?select=id,part_number,no_drawing,material&order=part_number.asc');
+  }
 }
 async function loadMasterNames() {
   // Part Name hanya ada di master.json lokal — cocokkan lewat Part No.
@@ -265,7 +274,7 @@ $('goKomplain').onclick = () => showView('komplain');
 function masterFilterList(q) {
   q = (q || '').trim().toLowerCase();
   if (!q) return products;
-  return products.filter(p => [text(p, 'Part No.'), text(p, 'Part Name'), text(p, 'No. Drawing'), text(p, 'material')].some(x => x.toLowerCase().includes(q)));
+  return products.filter(p => [text(p, 'Part No.'), text(p, 'Article No.'), text(p, 'Part Name'), text(p, 'No. Drawing'), text(p, 'material')].some(x => x.toLowerCase().includes(q)));
 }
 function renderMaster() {
   masterFiltered = masterFilterList($('masterSearch').value);
@@ -276,8 +285,8 @@ function renderMaster() {
   $('masterPageInfo').textContent = 'Hal. ' + (masterPage + 1) + ' / ' + pages;
   $('masterBody').innerHTML = slice.map(p => {
     const done = saved[p._id];
-    return `<tr><td data-label="Part Number"><b>${esc(text(p, 'Part No.')) || '-'}</b></td><td data-label="Part Name">${esc(text(p, 'Part Name')) || '-'}</td><td data-label="No. Drawing">${esc(text(p, 'No. Drawing')) || '-'}</td><td data-label="Material">${esc(text(p, 'material')) || '-'}</td><td data-label="Status Hari Ini">${done ? '<span class="pill ok">✓ Sudah · ' + esc(String(done.stok_aktual)) + '</span>' : '<span class="pill">Belum</span>'}</td></tr>`;
-  }).join('') || '<tr><td colspan="5">Tidak ditemukan.</td></tr>';
+    return `<tr><td data-label="Part Number"><b>${esc(text(p, 'Part No.')) || '-'}</b></td><td data-label="Article No.">${esc(text(p, 'Article No.')) || '-'}</td><td data-label="Part Name">${esc(text(p, 'Part Name')) || '-'}</td><td data-label="No. Drawing">${esc(text(p, 'No. Drawing')) || '-'}</td><td data-label="Material">${esc(text(p, 'material')) || '-'}</td><td data-label="Status Hari Ini">${done ? '<span class="pill ok">✓ Sudah · ' + esc(String(done.stok_aktual)) + '</span>' : '<span class="pill">Belum</span>'}</td></tr>`;
+  }).join('') || '<tr><td colspan="6">Tidak ditemukan.</td></tr>';
 }
 $('masterSearch').addEventListener('input', () => { masterPage = 0; renderMaster(); });
 $('masterPrev').onclick = () => { if (masterPage > 0) { masterPage--; renderMaster(); } };
@@ -287,7 +296,7 @@ $('masterNext').onclick = () => { masterPage++; renderMaster(); };
 function show(q) {
   q = (q || '').trim().toLowerCase();
   const a = q
-    ? products.filter(p => [text(p, 'Part No.'), text(p, 'Part Name'), text(p, 'No. Drawing')].some(x => x.toLowerCase().includes(q)))
+    ? products.filter(p => [text(p, 'Part No.'), text(p, 'Article No.'), text(p, 'Part Name'), text(p, 'No. Drawing')].some(x => x.toLowerCase().includes(q)))
     : products.slice(0, 25);
   currentList = a.slice(0, 60);
   $('hint').textContent = q ? a.length.toLocaleString('id-ID') + ' hasil' : 'Ketik untuk mencari. Menampilkan 25 part pertama.';
@@ -302,6 +311,7 @@ function pick(id) {
   $('searchPage').classList.add('hidden');
   $('detailPage').classList.remove('hidden');
   $('partNo').textContent = text(selected, 'Part No.') || '-';
+  $('article').textContent = text(selected, 'Article No.') || '-';
   $('partName').textContent = text(selected, 'Part Name') || '-';
   $('drawing').textContent = text(selected, 'No. Drawing') || '-';
   $('material').textContent = text(selected, 'material') || '-';
@@ -401,13 +411,14 @@ async function showHistoryDate(date) {
   $('historyDetail').classList.remove('hidden');
   $('historyDetailInfo').textContent = 'Memuat...';
   try {
-    const rows = await sbGetAll('stock_opname?select=*,master_parts(part_number,no_drawing,material)&opname_date=eq.' + date + '&order=master_part_id.asc');
+    const rows = await sbGetAll('stock_opname?select=*,master_parts(part_number,article_no,no_drawing,material)&opname_date=eq.' + date + '&order=master_part_id.asc');
     const names = await loadMasterNames();
     $('historyDetailInfo').textContent = (rows || []).length.toLocaleString('id-ID') + ' part diopname pada tanggal ini.';
     $('historyBody').innerHTML = (rows || []).map(r => {
       const pn = r.master_parts?.part_number || '';
-      return `<tr><td data-label="Jam">${esc(fmtTime(r.opname_time, r.updated_at))}</td><td data-label="Part Number"><b>${esc(pn)}</b></td><td data-label="Part Name">${esc(names[pn] || '-')}</td><td data-label="Stok">${esc(String(r.stok_aktual ?? ''))}</td><td data-label="Keterangan">${esc(r.keterangan || '')}</td></tr>`;
-    }).join('') || '<tr><td colspan="5">Tidak ada data.</td></tr>';
+      const an = r.master_parts?.article_no || '';
+      return `<tr><td data-label="Jam">${esc(fmtTime(r.opname_time, r.updated_at))}</td><td data-label="Part Number"><b>${esc(pn)}</b></td><td data-label="Article No.">${esc(an)}</td><td data-label="Part Name">${esc(names[pn] || '-')}</td><td data-label="Stok">${esc(String(r.stok_aktual ?? ''))}</td><td data-label="Keterangan">${esc(r.keterangan || '')}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Tidak ada data.</td></tr>';
     $('historyDetail').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
     console.error(e);
@@ -416,7 +427,7 @@ async function showHistoryDate(date) {
 }
 $('exportDateBtn').onclick = async () => {
   if (!historyDetailDate) return;
-  await exportRows(await sbGetAll('stock_opname?select=*,master_parts(part_number,no_drawing,material)&opname_date=eq.' + historyDetailDate + '&order=master_part_id.asc'), 'Rekap_Stock_Opname_' + historyDetailDate + '.xlsx');
+  await exportRows(await sbGetAll('stock_opname?select=*,master_parts(part_number,article_no,no_drawing,material)&opname_date=eq.' + historyDetailDate + '&order=master_part_id.asc'), 'Rekap_Stock_Opname_' + historyDetailDate + '.xlsx');
 };
 $('traceSearch').addEventListener('input', async e => {
   const q = e.target.value.trim().toLowerCase();
@@ -558,6 +569,7 @@ async function exportRows(data, filename) {
     'Tanggal': r.opname_date || '',
     'Jam': fmtTime(r.opname_time, r.updated_at),
     'Part Number': r.master_parts?.part_number || '',
+    'Article No.': r.master_parts?.article_no || '',
     'Part Name': names[String(r.master_parts?.part_number ?? '').trim()] || '',
     'No. Drawing': r.master_parts?.no_drawing || '',
     'Material': r.master_parts?.material || '',
@@ -569,7 +581,7 @@ async function exportRows(data, filename) {
   try {
     await loadXlsx();
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 12 }, { wch: 8 }, { wch: 16 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 30 }];
+    ws['!cols'] = [{ wch: 12 }, { wch: 8 }, { wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 30 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Stock Opname');
     XLSX.writeFile(wb, filename);
@@ -581,7 +593,7 @@ async function exportRows(data, filename) {
 }
 $('exportBtn').onclick = async () => {
   try {
-    const data = await sbGetAll('stock_opname?select=*,master_parts(part_number,no_drawing,material)&order=opname_date.desc&order=master_part_id.asc');
+    const data = await sbGetAll('stock_opname?select=*,master_parts(part_number,article_no,no_drawing,material)&order=opname_date.desc&order=master_part_id.asc');
     await exportRows(data, 'Rekap_Stock_Opname.xlsx');
   } catch (e) {
     console.error(e);
@@ -596,7 +608,8 @@ $('exportBtn').onclick = async () => {
 };
 $('exportMasterBtn').onclick = async () => {
   const rows = products.map(p => ({
-    'Part Number': text(p, 'Part No.'), 'Part Name': text(p, 'Part Name'),
+    'Part Number': text(p, 'Part No.'), 'Article No.': text(p, 'Article No.'),
+    'Part Name': text(p, 'Part Name'),
     'No. Drawing': text(p, 'No. Drawing'), 'Material': text(p, 'material'),
     'Status Hari Ini': saved[p._id] ? 'Sudah opname' : 'Belum opname',
     'Stok Saat Ini': saved[p._id] ? Number(saved[p._id].stok_aktual ?? 0) : ''
@@ -604,7 +617,7 @@ $('exportMasterBtn').onclick = async () => {
   try {
     await loadXlsx();
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data Master');
     XLSX.writeFile(wb, 'Data_Master_Stock_Opname.xlsx');
@@ -658,6 +671,7 @@ function toast(s) {
     products = master.map(p => ({
       _id: String(p.id),
       'Part No.': p.part_number || '',
+      'Article No.': p.article_no || '',
       'Part Name': names[String(p.part_number ?? '').trim()] || '',
       'No. Drawing': p.no_drawing || '',
       material: p.material || ''

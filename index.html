@@ -60,7 +60,7 @@
       </div>
       <div class="panel">
         <label class="quick-label">Cari part untuk opname</label>
-        <input id="quickSearch" placeholder="🔍  Ketik Part Number / Nama / Drawing, lalu Enter..." autocomplete="off">
+        <input id="quickSearch" placeholder="🔍  Ketik Part Number / Article No. / Nama / Drawing, lalu Enter..." autocomplete="off">
       </div>
       <div class="panel">
         <div class="panel-head"><h2>🕘 Opname Terakhir Hari Ini</h2><button id="goStock" class="secondary small">Mulai Opname →</button></div>
@@ -76,13 +76,13 @@
     <section id="view-master" class="view hidden">
       <div class="panel">
         <div class="panel-head">
-          <input id="masterSearch" placeholder="🔍  Cari Part Number / Nama / Drawing / Material..." autocomplete="off">
+          <input id="masterSearch" placeholder="🔍  Cari Part Number / Article No. / Nama / Drawing / Material..." autocomplete="off">
           <button id="exportMasterBtn" class="secondary small">📊 Export Master</button>
         </div>
         <div id="masterInfo" class="hint"></div>
         <div class="table-wrap">
           <table class="tbl">
-            <thead><tr><th>Part Number</th><th>Part Name</th><th>No. Drawing</th><th>Material</th><th>Status Hari Ini</th></tr></thead>
+            <thead><tr><th>Part Number</th><th>Article No.</th><th>Part Name</th><th>No. Drawing</th><th>Material</th><th>Status Hari Ini</th></tr></thead>
             <tbody id="masterBody"></tbody>
           </table>
         </div>
@@ -101,7 +101,7 @@
         <div class="progress"><div id="stockProgressBar" class="progress-bar" style="width:0%"></div></div>
       </div>
       <section id="searchPage" class="panel">
-        <input id="search" placeholder="🔍  Cari Part Number / Nama / Drawing..." autocomplete="off">
+        <input id="search" placeholder="🔍  Cari Part Number / Article No. / Nama / Drawing..." autocomplete="off">
         <div id="status" class="status loading">Menghubungkan ke database...</div>
         <div id="hint" class="hint"></div>
         <div id="results"></div>
@@ -112,6 +112,7 @@
           <button id="back" class="secondary">← Kembali</button>
         </div>
         <div class="product">
+          <div><small>ARTICLE NO.</small><strong id="article">-</strong></div>
           <div><small>PART NAME</small><strong id="partName">-</strong></div>
           <div><small>NO. DRAWING</small><strong id="drawing">-</strong></div>
           <div><small>MATERIAL</small><strong id="material">-</strong></div>
@@ -149,7 +150,7 @@
         <div id="historyDetailInfo" class="hint"></div>
         <div class="table-wrap">
           <table class="tbl">
-            <thead><tr><th>Jam</th><th>Part Number</th><th>Part Name</th><th>Stok</th><th>Keterangan</th></tr></thead>
+            <thead><tr><th>Jam</th><th>Part Number</th><th>Article No.</th><th>Part Name</th><th>Stok</th><th>Keterangan</th></tr></thead>
             <tbody id="historyBody"></tbody>
           </table>
         </div>
@@ -202,8 +203,15 @@
     <!-- ABOUT -->
     <section id="view-about" class="view hidden">
       <div class="panel">
-        <h2>📦 Stock Opname <span class="ver">v6.1</span></h2>
+        <h2>📦 Stock Opname <span class="ver">v7</span></h2>
         <p class="about-text">Aplikasi stock opname untuk HP. Cari part, hitung stok saat ini, simpan — datanya langsung masuk database Supabase dan bisa di-export ke file Excel (.xlsx).</p>
+        <h3>Yang baru di v7</h3>
+        <ul class="about-list">
+          <li>Data master diganti total: 636 part baru (10 Nov 2026) — sebelumnya 4.008 part lama.</li>
+          <li>Kolom baru Article No. di Data Master, detail part, Riwayat Revisi, pencarian, dan export Excel.</li>
+          <li>Data baru tidak punya Part Name — kolom nama tampil kosong.</li>
+          <li>Supabase: jalankan SQL ganti master di README.txt agar data baru tampil saat online.</li>
+        </ul>
         <h3>Yang baru di v6</h3>
         <ul class="about-list">
           <li>Tampilan baru: sidebar gelap, kartu statistik berikon, tombol +/− untuk hitung stok, tabel berubah jadi kartu di HP.</li>
@@ -214,7 +222,7 @@
           <li>Mode gelap untuk kerja di gudang yang redup.</li>
         </ul>
         <h3>Data</h3>
-        <p class="about-text">Master part &amp; hasil opname: Supabase. Part Name diambil dari data master lokal. Bila tidak ada internet, aplikasi tetap jalan (mode offline) dan hasil opname terkirim otomatis begitu online lagi.</p>
+        <p class="about-text">Master part &amp; hasil opname: Supabase (636 part, dengan Article No.). Data baru tidak punya Part Name, jadi kolom nama tampil kosong. Bila tidak ada internet, aplikasi tetap jalan (mode offline) dan hasil opname terkirim otomatis begitu online lagi.</p>
         <h3>Data &amp; Penyimpanan</h3>
         <div class="row-btns">
           <button id="clearOutboxBtn" class="secondary small">Hapus antrean offline</button>

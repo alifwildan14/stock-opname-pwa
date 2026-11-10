@@ -1,8 +1,27 @@
-STOCK OPNAME PWA V6.1
+STOCK OPNAME PWA V7
 
 PWA untuk HP dengan sidebar: Home, Data Master, Stock, Riwayat
 Revisi, Komplain, About. Data master + hasil opname tersimpan di
 Supabase. Export menghasilkan file .xlsx asli.
+
+YANG BERUBAH DI V7 (GANTI DATA MASTER)
+- Data master DIGANTI TOTAL: 636 part baru (10 Nov 2026),
+  menggantikan 4.008 part lama. Kolom data baru: Drawing No.,
+  Article No., Part No., Material — TIDAK ada Part Name, jadi
+  kolom Part Name tampil kosong di aplikasi & export.
+- Kolom baru Article No. tampil di Data Master, detail part,
+  Riwayat Revisi, pencarian, dan export .xlsx.
+- PENTING — SQL GANTI MASTER (WAJIB): jalankan file
+  ganti-master-stock-opname-2026-11-10.sql di Supabase SQL Editor
+  (sekali saja). File itu menambah kolom article_no, menghapus
+  semua part lama, lalu mengisi 636 part baru. Sampai SQL itu
+  dijalankan, aplikasi online masih menampilkan data lama;
+  aplikasi tetap bisa dibuka (mode offline memakai data baru
+  dari file lokal).
+- Riwayat opname lama TIDAK dihapus, tapi baris riwayat yang
+  merujuk ke part lama akan tampil tanpa nama part (part-nya
+  sudah tidak ada di master). Bila SQL DELETE gagal karena
+  foreign key, lihat catatan di file SQL.
 
 YANG BERUBAH DI V6.1 (PERBAIKAN UPDATE)
 - Service worker diperbaiki: versi baru langsung aktif
@@ -87,7 +106,7 @@ FITUR
 FILE
 - index.html, app.js, style.css, sw.js, manifest.json, icon.svg
 - xlsx.full.min.js (SheetJS 0.18.5, lisensi Apache-2.0)
-- data/master.json (4.008 part — cadangan + sumber Part Name)
+- data/master.json (636 part baru — cadangan offline)
 
 DEPLOY CLOUDFLARE (WORKER + STATIC ASSETS, API)
   python3 cf_deploy_assets.py qc <folder-ini>

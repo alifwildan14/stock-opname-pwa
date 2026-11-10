@@ -1,4 +1,4 @@
-const CACHE = 'stock-opname-v6.1';
+const CACHE = 'stock-opname-v7';
 const ASSETS = [
   './', './index.html', './style.css', './app.js',
   './xlsx.full.min.js', './manifest.json', './icon.svg',
