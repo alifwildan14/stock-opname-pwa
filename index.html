@@ -11,59 +11,217 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app">
-<header>
-  <div><h1>📦 Stock Opname</h1><p>Data tersimpan di Supabase — cari Part Number, Part Name, atau No. Drawing</p></div>
-  <div class="actions">
-    <button id="installBtn" class="secondary hidden">Pasang App</button>
-    <button id="exportBtn" class="secondary">Export</button>
-    <button id="resetBtn" class="danger">Reset</button>
-  </div>
-</header>
+<div class="layout">
+  <div id="overlay" class="overlay hidden"></div>
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <div>
+        <b>Stock Opname</b>
+        <span>QC • Supabase</span>
+      </div>
+    </div>
+    <nav id="nav">
+      <button data-view="home" class="nav-item active">🏠 <span>Home</span></button>
+      <button data-view="master" class="nav-item">📋 <span>Data Master</span></button>
+      <button data-view="stock" class="nav-item">📦 <span>Stock</span></button>
+      <button data-view="history" class="nav-item">🕘 <span>Riwayat Revisi</span></button>
+      <button data-view="komplain" class="nav-item">⚠️ <span>Komplain</span><em id="komplainBadge" class="badge hidden">0</em></button>
+      <button data-view="about" class="nav-item">ℹ️ <span>About</span></button>
+    </nav>
+    <div class="side-foot">
+      <div id="sideStatus" class="status loading">Menghubungkan...</div>
+      <div id="outboxInfo" class="outbox hidden"></div>
+      <button id="themeBtn" class="secondary small">🌙 Mode Gelap</button>
+      <button id="installBtn" class="secondary small hidden">📲 Pasang App</button>
+    </div>
+  </aside>
 
-<section class="stats">
-  <div><b id="total">0</b><span>Total Part</span></div>
-  <div><b id="done">0</b><span>Sudah Opname</span></div>
-  <div><b id="pending">0</b><span>Belum Opname</span></div>
-  <div><b id="varianceCount">0</b><span>Ada Selisih</span></div>
-</section>
+  <main class="main">
+    <header class="topbar">
+      <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
+      <div class="topbar-title"><h1 id="viewTitle">Home</h1><p id="viewSub">Ringkasan stock opname hari ini</p></div>
+      <div class="topbar-actions">
+        <button id="exportBtn" class="secondary">📊 Export Excel</button>
+      </div>
+    </header>
 
-<section id="searchPage" class="panel">
-  <input id="search" autofocus placeholder="🔍  Cari Part Number / Nama / Drawing..." autocomplete="off">
-  <div id="status" class="status loading">Menghubungkan ke database...</div>
-  <div id="hint"></div>
-  <div id="results"></div>
-</section>
+    <!-- HOME -->
+    <section id="view-home" class="view">
+      <div class="stats">
+        <div><b id="total">0</b><span>Total Part</span></div>
+        <div><b id="done">0</b><span>Sudah Opname</span></div>
+        <div><b id="pending">0</b><span>Belum Opname</span></div>
+        <div><b id="qtyTotal">0</b><span>Total Stok Saat Ini</span></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Progress opname hari ini</span><b id="progressText">0%</b></div>
+        <div class="progress"><div id="progressBar" class="progress-bar" style="width:0%"></div></div>
+      </div>
+      <div class="panel">
+        <label class="quick-label">Cari part untuk opname</label>
+        <input id="quickSearch" placeholder="🔍  Ketik Part Number / Nama / Drawing, lalu Enter..." autocomplete="off">
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>🕘 Opname Terakhir Hari Ini</h2><button id="goStock" class="secondary small">Mulai Opname →</button></div>
+        <div id="recentList" class="list"><div class="empty">Belum ada opname hari ini.</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>⚠️ Komplain Baru</h2><button id="goKomplain" class="secondary small">Lihat Semua →</button></div>
+        <div id="homeKomplain" class="list"><div class="empty">Tidak ada komplain baru.</div></div>
+      </div>
+    </section>
 
-<section id="detailPage" class="panel hidden">
-  <div class="top">
-    <div><small>PART NUMBER</small><h2 id="partNo">-</h2></div>
-    <button id="back" class="secondary">← Kembali</button>
-  </div>
-  <div class="product">
-    <div><small>PART NAME</small><strong id="partName">-</strong></div>
-    <div><small>NO. DRAWING</small><strong id="drawing">-</strong></div>
-  </div>
+    <!-- DATA MASTER -->
+    <section id="view-master" class="view hidden">
+      <div class="panel">
+        <div class="panel-head">
+          <input id="masterSearch" placeholder="🔍  Cari Part Number / Nama / Drawing / Material..." autocomplete="off">
+          <button id="exportMasterBtn" class="secondary small">📊 Export Master</button>
+        </div>
+        <div id="masterInfo" class="hint"></div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Part Number</th><th>Part Name</th><th>No. Drawing</th><th>Material</th><th>Status Hari Ini</th></tr></thead>
+            <tbody id="masterBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="masterPrev" class="secondary small">← Sebelumnya</button>
+          <span id="masterPageInfo"></span>
+          <button id="masterNext" class="secondary small">Berikutnya →</button>
+        </div>
+      </div>
+    </section>
 
-  <label>Stok Sistem
-    <input id="system" type="number" min="0" step="1" placeholder="Masukkan stok sistem">
-  </label>
+    <!-- STOCK (opname) -->
+    <section id="view-stock" class="view hidden">
+      <div class="progress-wrap slim">
+        <div class="progress-label"><span id="stockProgressText">0 / 0 sudah opname hari ini</span></div>
+        <div class="progress"><div id="stockProgressBar" class="progress-bar" style="width:0%"></div></div>
+      </div>
+      <section id="searchPage" class="panel">
+        <input id="search" placeholder="🔍  Cari Part Number / Nama / Drawing..." autocomplete="off">
+        <div id="status" class="status loading">Menghubungkan ke database...</div>
+        <div id="hint" class="hint"></div>
+        <div id="results"></div>
+      </section>
+      <section id="detailPage" class="panel hidden">
+        <div class="top">
+          <div><small>PART NUMBER</small><h2 id="partNo">-</h2></div>
+          <button id="back" class="secondary">← Kembali</button>
+        </div>
+        <div class="product">
+          <div><small>PART NAME</small><strong id="partName">-</strong></div>
+          <div><small>NO. DRAWING</small><strong id="drawing">-</strong></div>
+          <div><small>MATERIAL</small><strong id="material">-</strong></div>
+          <div><small>STATUS</small><strong id="partStatus">-</strong></div>
+        </div>
+        <label>Stok Saat Ini
+          <input id="current" type="number" min="0" step="1" placeholder="Masukkan jumlah hasil hitung">
+        </label>
+        <label>Waktu Input
+          <input id="waktu" type="datetime-local">
+        </label>
+        <label>Keterangan
+          <textarea id="note" placeholder="Opsional"></textarea>
+        </label>
+        <button id="save" class="primary">✓ Simpan Opname</button>
+        <div class="nav-row">
+          <button id="prevPart" class="secondary">← Part Sebelumnya</button>
+          <button id="nextPart" class="secondary">Part Berikutnya →</button>
+        </div>
+        <button id="nextUncounted" class="secondary wide">⏭️ Lanjut ke part yang belum diopname</button>
+      </section>
+    </section>
 
-  <label>Stok Aktual
-    <input id="actual" type="number" min="0" step="1" placeholder="Masukkan hasil hitung">
-  </label>
+    <!-- RIWAYAT REVISI -->
+    <section id="view-history" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>📅 Riwayat Tanggal Opname</h2><button id="refreshHistory" class="secondary small">↻ Refresh</button></div>
+        <div id="historyList" class="list"><div class="empty">Memuat riwayat...</div></div>
+      </div>
+      <div id="historyDetail" class="panel hidden">
+        <div class="panel-head"><h2 id="historyDateTitle">-</h2><button id="exportDateBtn" class="secondary small">📊 Export Tanggal Ini</button></div>
+        <div id="historyDetailInfo" class="hint"></div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Jam</th><th>Part Number</th><th>Part Name</th><th>Stok</th><th>Keterangan</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>🔎 Lacak Part</h2></div>
+        <input id="traceSearch" placeholder="Ketik Part Number untuk melihat riwayat revisinya..." autocomplete="off">
+        <div id="traceResult" class="list"></div>
+      </div>
+    </section>
 
-  <div class="variance"><span>SELISIH</span><b id="diff">-</b></div>
+    <!-- KOMPLAIN -->
+    <section id="view-komplain" class="view hidden">
+      <div class="panel">
+        <div class="panel-head"><h2>⚠️ Buat Komplain</h2></div>
+        <label>Part Terkait
+          <input id="komplainPartSearch" placeholder="🔍  Cari Part Number / Nama..." autocomplete="off">
+        </label>
+        <div id="komplainPartPick" class="hint">Belum ada part dipilih — komplain bisa juga tanpa part (umum).</div>
+        <label>Jenis Komplain
+          <select id="komplainJenis">
+            <option>Stok tidak cocok</option>
+            <option>Part rusak / cacat</option>
+            <option>Drawing tidak sesuai</option>
+            <option>Lokasi penyimpanan salah</option>
+            <option>Part tidak ditemukan</option>
+            <option>Lainnya</option>
+          </select>
+        </label>
+        <label>Deskripsi
+          <textarea id="komplainDesc" placeholder="Jelaskan masalahnya..."></textarea>
+        </label>
+        <button id="komplainSend" class="primary">Kirim Komplain</button>
+        <div id="komplainNote" class="hint"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Daftar Komplain</h2>
+          <select id="komplainFilter" class="small">
+            <option value="">Semua Status</option>
+            <option value="Baru">Baru</option>
+            <option value="Diproses">Diproses</option>
+            <option value="Selesai">Selesai</option>
+          </select>
+        </div>
+        <div id="komplainList" class="list"><div class="empty">Memuat komplain...</div></div>
+      </div>
+    </section>
 
-  <label>Keterangan
-    <textarea id="note" placeholder="Opsional"></textarea>
-  </label>
-
-  <button id="save" class="primary">✓ Simpan Opname</button>
-</section>
-
-<div id="toast" class="toast"></div>
+    <!-- ABOUT -->
+    <section id="view-about" class="view hidden">
+      <div class="panel">
+        <h2>📦 Stock Opname <span class="ver">v5</span></h2>
+        <p class="about-text">Aplikasi stock opname untuk HP. Cari part, hitung stok saat ini, simpan — datanya langsung masuk database Supabase dan bisa di-export ke file Excel (.xlsx).</p>
+        <h3>Yang baru di v5</h3>
+        <ul class="about-list">
+          <li>Sidebar dengan menu Home, Data Master, Stock, Riwayat Revisi, Komplain, dan About.</li>
+          <li>Form opname lebih simpel: hanya Stok Saat Ini + Waktu Input (tanggal, jam, menit).</li>
+          <li>Riwayat Revisi: lihat opname per tanggal dan lacak perubahan satu part dari waktu ke waktu.</li>
+          <li>Komplain: laporkan part bermasalah beserta status tindak lanjutnya.</li>
+          <li>Mode gelap untuk kerja di gudang yang redup.</li>
+        </ul>
+        <h3>Data</h3>
+        <p class="about-text">Master part &amp; hasil opname: Supabase. Part Name diambil dari data master lokal. Bila tidak ada internet, aplikasi tetap jalan (mode offline) dan hasil opname terkirim otomatis begitu online lagi.</p>
+        <h3>Data &amp; Penyimpanan</h3>
+        <div class="row-btns">
+          <button id="clearOutboxBtn" class="secondary small">Hapus antrean offline</button>
+          <button id="clearLocalBtn" class="danger small">Hapus data lokal HP</button>
+        </div>
+        <p class="hint">Tombol di atas hanya menghapus data di HP ini — data di Supabase tidak ikut terhapus.</p>
+      </div>
+    </section>
+  </main>
 </div>
+<div id="toast" class="toast"></div>
 <script src="app.js"></script>
 </body>
 </html>
