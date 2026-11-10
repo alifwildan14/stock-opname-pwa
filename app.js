@@ -1,5 +1,6 @@
-// Stock Opname PWA v6 — sidebar + Supabase (PostgREST) + export .xlsx
-// v6: refresh tampilan (sidebar gelap, kartu statistik, stepper +/-,
+// Stock Opname PWA v6.1 — sidebar + Supabase (PostgREST) + export .xlsx
+// v6.1: perbaikan service worker — update versi langsung sampai ke
+// pengguna lama (skipWaiting + clients.claim + network-first shell).
 // Skema mengikuti situs live qc.alifwildan14.workers.dev:
 //   master_parts(id, part_number, no_drawing, material)
 //   stock_opname(master_part_id, opname_date, revisi_gambar, stok_aktual,

@@ -1,8 +1,17 @@
-STOCK OPNAME PWA V6
+STOCK OPNAME PWA V6.1
 
 PWA untuk HP dengan sidebar: Home, Data Master, Stock, Riwayat
 Revisi, Komplain, About. Data master + hasil opname tersimpan di
 Supabase. Export menghasilkan file .xlsx asli.
+
+YANG BERUBAH DI V6.1 (PERBAIKAN UPDATE)
+- Service worker diperbaiki: versi baru langsung aktif
+  (skipWaiting + clients.claim) dan file tampilan utama selalu
+  diambil dari jaringan bila online (network-first), jadi pengguna
+  yang sudah pernah membuka aplikasi tidak lagi tertahan di versi
+  lama. Sebelumnya, v6 sempat tidak tampil di browser yang sudah
+  pernah membuka v5 karena cache service worker lama.
+  Mode offline tetap jalan lewat cache.
 
 YANG BERUBAH DI V6 (REFRESH TAMPILAN)
 - Sidebar gelap (navy) dengan menu aktif berwarna biru.
