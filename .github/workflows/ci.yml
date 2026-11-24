@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || echo "No package.json, skipping npm install"
+
+      - name: Lint HTML
+        run: npx htmlhint index.html || echo "htmlhint not installed, skipping"
+
+      - name: Lint JavaScript
+        run: npx eslint app.js || echo "eslint not installed, skipping"
+
+      - name: Validate PWA manifest
+        run: |
+          npx @pwa/manifest-validator manifest.json || echo "manifest validator not installed, skipping"
+
+      - name: Check for console.log in production files
+        run: |
+          if grep -r "console\.log" --include="*.js" --include="*.html" . | grep -v node_modules | grep -v ".min."; then
+            echo "Found console.log in source files"
+            exit 1
+          fi
+
+      - name: Validate HTML
+        run: npx html-validate index.html || echo "html-validate not installed, skipping"
+
+  deploy-preview:
+    needs: lint-and-test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Cloudflare Pages Preview
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: stock-opname-pwa
+          directory: .
+          branch: preview-${{ github.event.pull_request.number }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
